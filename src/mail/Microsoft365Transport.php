@@ -1,6 +1,6 @@
 <?php
 
-namespace madebythink\office365mailtransport\mail;
+namespace madebythink\microsoft365mailtransport\mail;
 
 use Craft;
 use GuzzleHttp\Client;
@@ -17,7 +17,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\MessageConverter;
 
-class Office365Transport extends AbstractTransport
+class Microsoft365Transport extends AbstractTransport
 {
     private const GRAPH_API_URL = 'https://graph.microsoft.com/v1.0';
 
@@ -70,7 +70,7 @@ class Office365Transport extends AbstractTransport
      */
     private function getAccessToken(): AccessTokenInterface
     {
-        $cacheKey = 'office365mailtransport_access_token.' . md5($this->clientId);
+        $cacheKey = 'microsoft365mailtransport_access_token.' . md5($this->clientId);
         $cachedToken = Craft::$app->getCache()->get($cacheKey);
 
         if ($cachedToken instanceof AccessTokenInterface && !$cachedToken->hasExpired()) {

@@ -1,6 +1,6 @@
 <?php
 
-namespace madebythink\office365mailtransport\models;
+namespace madebythink\microsoft365mailtransport\models;
 
 use craft\base\Model;
 

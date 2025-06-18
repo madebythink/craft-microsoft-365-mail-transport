@@ -1,4 +1,4 @@
-# Office365 Mail Transport for Craft CMS
+# Microsoft365 Mail Transport for Craft CMS
 
 This plugin allows Craft CMS to send email using the Microsoft Graph API, authenticating with OAuth 2.0.
 

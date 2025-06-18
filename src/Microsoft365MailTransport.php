@@ -3,20 +3,20 @@
  * @copyright
  */
 
-namespace madebythink\office365mailtransport;
+namespace madebythink\microsoft365mailtransport;
 
 use craft\base\Plugin;
 use craft\events\RegisterComponentTypesEvent;
 use craft\helpers\MailerHelper;
-use madebythink\office365mailtransport\mail\Office365Adapter;
+use madebythink\microsoft365mailtransport\mail\Microsoft365Adapter;
 use yii\base\Event;
 
-class Office365MailTransport extends Plugin
+class Microsoft365MailTransport extends Plugin
 {
     /**
-     * @var Office365MailTransport
+     * @var Microsoft365MailTransport
      */
-    public static Office365MailTransport $plugin;
+    public static Microsoft365MailTransport $plugin;
 
     /**
      * @inheritdoc
@@ -30,7 +30,7 @@ class Office365MailTransport extends Plugin
             MailerHelper::class,
             MailerHelper::EVENT_REGISTER_MAILER_TRANSPORTS,
             function (RegisterComponentTypesEvent $event) {
-                $event->types[] = Office365Adapter::class;
+                $event->types[] = Microsoft365Adapter::class;
             }
         );
     }
