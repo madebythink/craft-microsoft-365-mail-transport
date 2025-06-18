@@ -1,0 +1,49 @@
+{% import "_includes/forms" as forms %}
+
+{{ forms.autosuggestField({
+    label: "Tenant ID"|t('app'),
+    id: 'tenantId',
+    name: 'tenantId',
+    instructions: "Your Azure application's Directory (tenant) ID."|t('app'),
+    suggestEnvVars: true,
+    suggestions: craft.cp.getEnvSuggestions(),
+    value: adapter.tenantId,
+    errors: adapter.getErrors('tenantId'),
+    required: true,
+}) }}
+
+{{ forms.autosuggestField({
+    label: "Client ID"|t('app'),
+    id: 'clientId',
+    name: 'clientId',
+    instructions: "Your Azure application's Application (client) ID."|t('app'),
+    suggestEnvVars: true,
+    suggestions: craft.cp.getEnvSuggestions(),
+    value: adapter.clientId,
+    errors: adapter.getErrors('clientId'),
+    required: true,
+}) }}
+
+{{ forms.autosuggestField({
+    label: "Client Secret"|t('app'),
+    id: 'clientSecret',
+    name: 'clientSecret',
+    instructions: "Your Azure application's Client Secret **Value**."|t('app'),
+    suggestEnvVars: true,
+    suggestions: craft.cp.getEnvSuggestions(),
+    value: adapter.clientSecret,
+    errors: adapter.getErrors('clientSecret'),
+    required: true,
+}) }}
+
+{{ forms.autosuggestField({
+    label: "From Email Address"|t('app'),
+    id: 'fromEmail',
+    name: 'fromEmail',
+    instructions: "The email address of the user you are sending mail from. Must be a licensed Office 365 mailbox."|t('app'),
+    suggestEnvVars: true,
+    suggestions: craft.cp.getEnvSuggestions(),
+    value: adapter.fromEmail,
+    errors: adapter.getErrors('fromEmail'),
+    required: true,
+}) }}

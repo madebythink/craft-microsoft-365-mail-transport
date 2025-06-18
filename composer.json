@@ -1,0 +1,49 @@
+{
+  "name": "madebythink/craft-microsoft-365-mail-transport",
+  "description": "Microsoft 365 Mail Transport plugin for CraftCMS developed by Think",
+  "type": "craft-plugin",
+  "license": "proprietary",
+  "support": {
+    "email": "hi@think.au",
+    "issues": "https://github.com/madebythink/craft-microsoft-365-mail-transport/issues?state=open",
+    "source": "https://github.com/madebythink/craft-microsoft-365-mail-transport",
+    "docs": "https://github.com/madebythink/craft-microsoft-365-mail-transport",
+    "rss": "https://github.com/madebythink/craft-microsoft-365-mail-transport/releases.atom"
+  },
+  "require": {
+    "php": ">=8.2",
+    "craftcms/cms": "^5.0",
+    "league/oauth2-client": "^2.7",
+    "guzzlehttp/guzzle": "^7.0"
+  },
+  "require-dev": {
+    "craftcms/ecs": "dev-main",
+    "craftcms/phpstan": "dev-main"
+  },
+  "autoload": {
+    "psr-4": {
+      "madebythink\\microsoft365mailtransport\\": "src/"
+    }
+  },
+  "extra": {
+    "handle": "microsoft-365-mail-transport",
+    "name": "Microsoft 365 Mail Transport by Think",
+    "developer": "Made by Think",
+    "documentationUrl": "https://github.com/madebythink/craft-microsoft-365-mail-transport"
+  },
+  "scripts": {
+    "check-cs": "ecs check --ansi",
+    "fix-cs": "ecs check --ansi --fix",
+    "phpstan": "phpstan --memory-limit=1G"
+  },
+  "config": {
+    "sort-packages": true,
+    "platform": {
+      "php": "8.2"
+    },
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true,
+      "craftcms/plugin-installer": true
+    }
+  }
+}
