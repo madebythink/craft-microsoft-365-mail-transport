@@ -10,6 +10,10 @@
     "docs": "https://github.com/madebythink/craft-microsoft-365-mail-transport",
     "rss": "https://github.com/madebythink/craft-microsoft-365-mail-transport/releases.atom"
   },
+  "authors": [{
+    "name": "Made By Think",
+    "homepage": "https://think.au"
+  }],
   "require": {
     "php": ">=8.2",
     "craftcms/cms": "^5.0",
@@ -28,7 +32,8 @@
   "extra": {
     "handle": "microsoft-365-mail-transport",
     "name": "Microsoft 365 Mail Transport by Think",
-    "developer": "Made by Think",
+    "class": "madebythink\\microsoft365mailtransport\\Microsoft365MailTransport",
+    "developer": "Made By Think",
     "documentationUrl": "https://github.com/madebythink/craft-microsoft-365-mail-transport"
   },
   "scripts": {

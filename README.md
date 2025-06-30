@@ -7,7 +7,7 @@ This plugin allows Craft CMS to send email using the Microsoft Graph API, authen
 - Craft CMS 5.0+
 - PHP 8.0+
 - An Azure Active Directory account with permissions to create and manage App Registrations.
-- A licensed Office 365 mailbox to send email from.
+- A licensed Microsoft 365 mailbox to send email from.
 
 ## Installation
 

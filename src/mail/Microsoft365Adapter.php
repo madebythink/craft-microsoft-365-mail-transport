@@ -6,12 +6,13 @@ use Craft;
 use craft\helpers\App;
 use craft\mail\transportadapters\BaseTransportAdapter;
 use Symfony\Component\Mailer\Transport\AbstractTransport;
+use madebythink\microsoft365mailtransport\Microsoft365MailTransport;
 
 class Microsoft365Adapter extends BaseTransportAdapter
 {
     public static function displayName(): string
     {
-        return 'Office 365 (Graph API)';
+        return 'Microsoft 365 (Graph API)';
     }
 
     public ?string $tenantId = null;
@@ -24,14 +25,28 @@ class Microsoft365Adapter extends BaseTransportAdapter
         return [
             [['tenantId', 'clientId', 'clientSecret', 'fromEmail'], 'required'],
             [['tenantId', 'clientId', 'clientSecret', 'fromEmail'], 'string'],
-            [['fromEmail'], 'email'],
+            [['fromEmail'], 'validateFromEmail'],
         ];
+    }
+
+    public function validateFromEmail(string $attribute): void
+    {
+        $value = $this->$attribute;
+        $isEnvVar = substr(trim($value), 0, 1) === '$';
+
+        if (!$isEnvVar && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+            $this->addError($attribute, Craft::t('app', '{attribute} must be a valid email address or an environment variable.', [
+                'attribute' => $this->getAttributeLabel($attribute),
+            ]));
+        }
     }
 
     public function getSettingsHtml(): ?string
     {
+        $templatePath = Microsoft365MailTransport::$plugin->handle . '/_settings';
+
         return Craft::$app->getView()->renderTemplate(
-            'microsoft365mailtransport/_settings',
+            $templatePath,
             ['adapter' => $this]
         );
     }
