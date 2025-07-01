@@ -33,7 +33,6 @@
     "handle": "microsoft-365-mail-transport",
     "name": "Microsoft 365 Mail Transport by Think",
     "class": "madebythink\\microsoft365mailtransport\\Microsoft365MailTransport",
-    "developer": "Made By Think",
     "documentationUrl": "https://github.com/madebythink/craft-microsoft-365-mail-transport"
   },
   "scripts": {
