@@ -20,6 +20,7 @@ use Symfony\Component\Mime\MessageConverter;
 class Microsoft365Transport extends AbstractTransport
 {
     private const GRAPH_API_URL = 'https://graph.microsoft.com/v1.0';
+    private const GRAPH_API_SCOPE = 'https://graph.microsoft.com/.default';
 
     private string $tenantId;
     private string $clientId;
@@ -83,10 +84,19 @@ class Microsoft365Transport extends AbstractTransport
             'urlAuthorize' => "https://login.microsoftonline.com/{$this->tenantId}/oauth2/v2.0/authorize",
             'urlAccessToken' => "https://login.microsoftonline.com/{$this->tenantId}/oauth2/v2.0/token",
             'urlResourceOwnerDetails' => '',
-            'scopes' => 'https://graph.microsoft.com/.default',
+            'scopes' => self::GRAPH_API_SCOPE,
         ]);
 
-        $accessToken = $provider->getAccessToken('client_credentials');
+        try {
+            $accessToken = $provider->getAccessToken('client_credentials', [
+                'scope' => self::GRAPH_API_SCOPE
+            ]);
+        } catch (IdentityProviderException $e) {
+            $responseBody = $e->getResponseBody();
+            $detailedError = $responseBody['error_description'] ?? $e->getMessage();
+            Craft::error('Failed to get Microsoft Graph access token. Reason: ' . $detailedError, __METHOD__);
+            throw new TransportException($detailedError, 0, $e);
+        }
 
         // Cache the token for its lifetime, minus a 60-second buffer
         $expiresIn = $accessToken->getExpires() ? $accessToken->getExpires() - time() - 60 : 3540;
@@ -97,7 +107,7 @@ class Microsoft365Transport extends AbstractTransport
 
     private function buildPayload(Email $email): array
     {
-        $formatAddress = function(Address $address): array {
+        $formatAddress = function (Address $address): array {
             return [
                 'emailAddress' => [
                     'name' => $address->getName(),
@@ -124,7 +134,7 @@ class Microsoft365Transport extends AbstractTransport
         if ($replyTo = $email->getReplyTo()) {
             $message['replyTo'] = array_map($formatAddress, $replyTo);
         }
-        
+
         // Handle attachments
         $attachments = [];
         foreach ($email->getAttachments() as $attachment) {
