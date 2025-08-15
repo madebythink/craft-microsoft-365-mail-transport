@@ -5,7 +5,8 @@ namespace madebythink\microsoft365mailtransport\mail;
 use Craft;
 use craft\helpers\App;
 use craft\mail\transportadapters\BaseTransportAdapter;
-use Symfony\Component\Mailer\Transport\AbstractTransport;
+use Swift_Transport;
+//use Symfony\Component\Mailer\Transport\AbstractTransport;
 use madebythink\microsoft365mailtransport\Microsoft365MailTransport;
 
 class Microsoft365Adapter extends BaseTransportAdapter
@@ -51,7 +52,7 @@ class Microsoft365Adapter extends BaseTransportAdapter
         );
     }
 
-    public function defineTransport(): AbstractTransport|array
+    public function defineTransport(): Swift_Transport|array
     {
         return new Microsoft365Transport([
             'tenantId' => App::parseEnv($this->tenantId),

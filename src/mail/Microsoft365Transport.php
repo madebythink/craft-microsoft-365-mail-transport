@@ -9,15 +9,15 @@ use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Mailer\Envelope;
-use Symfony\Component\Mailer\Exception\TransportException;
-use Symfony\Component\Mailer\SentMessage;
-use Symfony\Component\Mailer\Transport\AbstractTransport;
-use Symfony\Component\Mime\Address;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\Mime\MessageConverter;
+// use Symfony\Component\Mailer\Envelope;
+// use Symfony\Component\Mailer\Exception\TransportException;
+// use Symfony\Component\Mailer\SentMessage;
+// use Symfony\Component\Mailer\Transport\AbstractTransport;
+// use Symfony\Component\Mime\Address;
+// use Symfony\Component\Mime\Email;
+// use Symfony\Component\Mime\MessageConverter;
 
-class Microsoft365Transport extends AbstractTransport
+class Microsoft365Transport implements \Swift_Transport
 {
     private const GRAPH_API_URL = 'https://graph.microsoft.com/v1.0';
     private const GRAPH_API_SCOPE = 'https://graph.microsoft.com/.default';
@@ -28,15 +28,13 @@ class Microsoft365Transport extends AbstractTransport
     private string $fromEmail;
     private Client $client;
 
-    public function __construct(array $config, LoggerInterface $logger = null)
+    public function __construct(array $config)
     {
         $this->tenantId = $config['tenantId'];
         $this->clientId = $config['clientId'];
         $this->clientSecret = $config['clientSecret'];
         $this->fromEmail = $config['fromEmail'];
         $this->client = new Client();
-
-        parent::__construct(null, $logger);
     }
 
     public function __toString(): string
@@ -44,12 +42,57 @@ class Microsoft365Transport extends AbstractTransport
         return 'microsoft-graph';
     }
 
-    protected function doSend(SentMessage $message): void
+    public function isStarted(): bool
     {
+        return true;
+    }
+
+    public function start(): void
+    {
+    }
+
+    public function stop(): void
+    {
+    }
+
+    public function ping(): bool {
+        return true;
+    }
+
+    public function registerPlugin(\Swift_Events_EventListener $plugin): void
+    {
+        // Not implemented
+    }
+
+    // protected function doSend(SentMessage $message): void
+    // {
+    //     try {
+    //         $accessToken = $this->getAccessToken();
+    //         $email = MessageConverter::toEmail($message->getOriginalMessage());
+    //         $payload = $this->buildPayload($email);
+
+    //         $endpoint = self::GRAPH_API_URL . "/users/{$this->fromEmail}/sendMail";
+
+    //         $this->client->post($endpoint, [
+    //             'headers' => [
+    //                 'Authorization' => 'Bearer ' . $accessToken->getToken(),
+    //                 'Content-Type' => 'application/json',
+    //             ],
+    //             'json' => $payload,
+    //         ]);
+    //     } catch (GuzzleException | IdentityProviderException $e) {
+    //         Craft::error('Email sending failed via Graph API: ' . $e->getMessage(), __METHOD__);
+    //         throw new TransportException('Could not send email via Microsoft Graph API.', 0, $e);
+    //     }
+    // }
+
+    public function send(\Swift_Mime_SimpleMessage $message, &$failedRecipients = null): int
+    {
+        $failedRecipients = (array) $failedRecipients;
+
         try {
             $accessToken = $this->getAccessToken();
-            $email = MessageConverter::toEmail($message->getOriginalMessage());
-            $payload = $this->buildPayload($email);
+            $payload = $this->buildPayload($message);
 
             $endpoint = self::GRAPH_API_URL . "/users/{$this->fromEmail}/sendMail";
 
@@ -60,10 +103,24 @@ class Microsoft365Transport extends AbstractTransport
                 ],
                 'json' => $payload,
             ]);
-        } catch (GuzzleException | IdentityProviderException $e) {
+        } catch (GuzzleException | IdentityProviderException | \Exception $e) {
             Craft::error('Email sending failed via Graph API: ' . $e->getMessage(), __METHOD__);
-            throw new TransportException('Could not send email via Microsoft Graph API.', 0, $e);
+            // In case of failure, you might want to add all recipients to the failed list
+            $allRecipients = array_merge(
+                array_keys((array)$message->getTo()),
+                array_keys((array)$message->getCc()),
+                array_keys((array)$message->getBcc())
+            );
+            $failedRecipients = array_unique(array_merge($failedRecipients, $allRecipients));
         }
+
+        $sentRecipients = array_merge(
+            array_keys((array)$message->getTo()),
+            array_keys((array)$message->getCc()),
+            array_keys((array)$message->getBcc())
+        );
+
+        return count($sentRecipients) - count($failedRecipients);
     }
 
     /**
@@ -95,7 +152,7 @@ class Microsoft365Transport extends AbstractTransport
             $responseBody = $e->getResponseBody();
             $detailedError = $responseBody['error_description'] ?? $e->getMessage();
             Craft::error('Failed to get Microsoft Graph access token. Reason: ' . $detailedError, __METHOD__);
-            throw new TransportException($detailedError, 0, $e);
+            throw $e;
         }
 
         // Cache the token for its lifetime, minus a 60-second buffer
@@ -105,45 +162,68 @@ class Microsoft365Transport extends AbstractTransport
         return $accessToken;
     }
 
-    private function buildPayload(Email $email): array
+    private function buildPayload(\Swift_Message $swiftMessage): array
     {
-        $formatAddress = function (Address $address): array {
+        $formatAddress = function (string $email, ?string $name): array {
             return [
                 'emailAddress' => [
-                    'name' => $address->getName(),
-                    'address' => $address->getAddress(),
+                    'name' => $name,
+                    'address' => $email,
                 ],
             ];
         };
 
+        $toRecipients = [];
+        if ($swiftMessage->getTo()) {
+            foreach ($swiftMessage->getTo() as $email => $name) {
+                $toRecipients[] = $formatAddress($email, $name);
+            }
+        }
+
         $message = [
-            'subject' => $email->getSubject(),
+            'subject' => $swiftMessage->getSubject(),
             'body' => [
-                'contentType' => $email->getHtmlBody() ? 'HTML' : 'Text',
-                'content' => $email->getHtmlBody() ?: $email->getTextBody(),
+                'contentType' => $swiftMessage->getContentType() === 'text/html' ? 'HTML' : 'Text',
+                'content' => $swiftMessage->getBody(),
             ],
-            'toRecipients' => array_map($formatAddress, $email->getTo()),
+            'toRecipients' => $toRecipients,
         ];
 
-        if ($cc = $email->getCc()) {
-            $message['ccRecipients'] = array_map($formatAddress, $cc);
+        if ($cc = $swiftMessage->getCc()) {
+            $ccRecipients = [];
+            foreach ($cc as $email => $name) {
+                $ccRecipients[] = $formatAddress($email, $name);
+            }
+            $message['ccRecipients'] = $ccRecipients;
         }
-        if ($bcc = $email->getBcc()) {
-            $message['bccRecipients'] = array_map($formatAddress, $bcc);
+
+        if ($bcc = $swiftMessage->getBcc()) {
+            $bccRecipients = [];
+            foreach ($bcc as $email => $name) {
+                $bccRecipients[] = $formatAddress($email, $name);
+            }
+            $message['bccRecipients'] = $bccRecipients;
         }
-        if ($replyTo = $email->getReplyTo()) {
-            $message['replyTo'] = array_map($formatAddress, $replyTo);
+
+        if ($replyTo = $swiftMessage->getReplyTo()) {
+            $replyToRecipients = [];
+            foreach ($replyTo as $email => $name) {
+                $replyToRecipients[] = $formatAddress($email, $name);
+            }
+            $message['replyTo'] = $replyToRecipients;
         }
 
         // Handle attachments
         $attachments = [];
-        foreach ($email->getAttachments() as $attachment) {
-            $attachments[] = [
-                '@odata.type' => '#microsoft.graph.fileAttachment',
-                'name' => $attachment->getPreparedHeaders()->getHeaderParameter('Content-Disposition', 'filename'),
-                'contentType' => $attachment->getMediaType(),
-                'contentBytes' => base64_encode($attachment->getBody()),
-            ];
+        foreach ($swiftMessage->getChildren() as $child) {
+            if ($child instanceof \Swift_Attachment) {
+                $attachments[] = [
+                    '@odata.type' => '#microsoft.graph.fileAttachment',
+                    'name' => $child->getFilename(),
+                    'contentType' => $child->getContentType(),
+                    'contentBytes' => base64_encode($child->getBody()),
+                ];
+            }
         }
 
         if (!empty($attachments)) {

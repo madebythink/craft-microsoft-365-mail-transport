@@ -15,10 +15,10 @@
     "homepage": "https://think.au"
   }],
   "require": {
-    "php": ">=8.2",
-    "craftcms/cms": "^5.0",
+    "php": ">=7.4",
+    "craftcms/cms": "^3.0",
     "league/oauth2-client": "^2.7",
-    "guzzlehttp/guzzle": "^7.0"
+    "guzzlehttp/guzzle": "^6.5.5|^7.0"
   },
   "require-dev": {
     "craftcms/ecs": "dev-main",
@@ -43,7 +43,7 @@
   "config": {
     "sort-packages": true,
     "platform": {
-      "php": "8.2"
+      "php": "7.4"
     },
     "allow-plugins": {
       "yiisoft/yii2-composer": true,
