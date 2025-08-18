@@ -164,6 +164,15 @@ class Microsoft365Transport implements \Swift_Transport
 
     private function buildPayload(\Swift_Message $swiftMessage): array
     {
+        // Get email body
+        $htmlBody = $swiftMessage->getBody();
+        $textBody = '';
+        $children = $swiftMessage->getChildren();
+        if (isset($children[0]) && $children[0] instanceof \Swift_MimePart) {
+            $textBody = $children[0]->getBody();
+        }
+        $body = ($htmlBody) ? $htmlBody : $textBody;
+
         $formatAddress = function (string $email, ?string $name): array {
             return [
                 'emailAddress' => [
@@ -184,7 +193,7 @@ class Microsoft365Transport implements \Swift_Transport
             'subject' => $swiftMessage->getSubject(),
             'body' => [
                 'contentType' => $swiftMessage->getContentType() === 'text/html' ? 'HTML' : 'Text',
-                'content' => $swiftMessage->getBody(),
+                'content' => $body,
             ],
             'toRecipients' => $toRecipients,
         ];
