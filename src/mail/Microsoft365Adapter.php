@@ -52,7 +52,7 @@ class Microsoft365Adapter extends BaseTransportAdapter
         );
     }
 
-    public function defineTransport(): Swift_Transport|array
+    public function defineTransport()
     {
         return new Microsoft365Transport([
             'tenantId' => App::parseEnv($this->tenantId),
