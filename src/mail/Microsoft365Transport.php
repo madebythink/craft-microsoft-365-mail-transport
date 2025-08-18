@@ -164,14 +164,13 @@ class Microsoft365Transport implements \Swift_Transport
 
     private function buildPayload(\Swift_Message $swiftMessage): array
     {
-        // Get email body
-        $htmlBody = $swiftMessage->getBody();
-        $textBody = '';
-        $children = $swiftMessage->getChildren();
-        if (isset($children[0]) && $children[0] instanceof \Swift_MimePart) {
-            $textBody = $children[0]->getBody();
-        }
-        $body = ($htmlBody) ? $htmlBody : $textBody;
+        // Extract HTML and Text bodies (prefer HTML if available)
+        [$htmlBody, $textBody] = $this->extractBodies($swiftMessage);
+
+        $hasHtml = $htmlBody !== null && $htmlBody !== '';
+        $bodyContentType = $hasHtml ? 'HTML' : 'Text';
+        $bodyContent = $hasHtml ? $htmlBody : ($textBody ?? $swiftMessage->getBody());
+
 
         $formatAddress = function (string $email, ?string $name): array {
             return [
@@ -192,8 +191,8 @@ class Microsoft365Transport implements \Swift_Transport
         $message = [
             'subject' => $swiftMessage->getSubject(),
             'body' => [
-                'contentType' => $swiftMessage->getContentType() === 'text/html' ? 'HTML' : 'Text',
-                'content' => $body,
+                'contentType' => $bodyContentType,
+                'content' => $bodyContent,
             ],
             'toRecipients' => $toRecipients,
         ];
@@ -243,5 +242,36 @@ class Microsoft365Transport implements \Swift_Transport
             'message' => $message,
             'saveToSentItems' => 'true',
         ];
+    }
+
+    /**
+     * Return [htmlBody, textBody] by inspecting the message and its parts.
+     */
+    private function extractBodies(\Swift_Message $m): array
+    {
+        $html = null;
+        $text = null;
+
+        // Direct body if single-part
+        $ct = strtolower((string)$m->getContentType());
+        if (strpos($ct, 'text/html') === 0) {
+            $html = (string)$m->getBody();
+        } elseif (strpos($ct, 'text/plain') === 0) {
+            $text = (string)$m->getBody();
+        }
+
+        // Look through children for the best alternatives
+        foreach ($m->getChildren() as $child) {
+            if ($child instanceof \Swift_MimePart) {
+                $ctype = strtolower((string)$child->getContentType());
+                if (strpos($ctype, 'text/html') === 0) {
+                    $html = (string)$child->getBody();
+                } elseif (strpos($ctype, 'text/plain') === 0) {
+                    $text = (string)$child->getBody();
+                }
+            }
+        }
+
+        return [$html, $text];
     }
 }
