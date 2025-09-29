@@ -28,7 +28,7 @@ class Microsoft365MailTransport extends Plugin
 
         Event::on(
             MailerHelper::class,
-            MailerHelper::EVENT_REGISTER_MAILER_TRANSPORTS,
+            MailerHelper::EVENT_REGISTER_MAILER_TRANSPORT_TYPES,
             function (RegisterComponentTypesEvent $event) {
                 $event->types[] = Microsoft365Adapter::class;
             }
