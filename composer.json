@@ -2,6 +2,15 @@
   "name": "madebythink/craft-microsoft-365-mail-transport",
   "description": "Microsoft 365 Mail Transport plugin for CraftCMS developed by Think",
   "type": "craft-plugin",
+  "keywords": [
+    "craft",
+    "cms",
+    "craftcms",
+    "craft-plugin",
+    "Microsoft 365", 
+    "mail", 
+    "transport"
+  ],
   "license": "proprietary",
   "support": {
     "email": "hi@think.au",
@@ -14,6 +23,7 @@
     "name": "Made By Think",
     "homepage": "https://think.au"
   }],
+  
   "require": {
     "php": ">=8.2",
     "craftcms/cms": "^5.0",
